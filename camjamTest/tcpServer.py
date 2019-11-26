@@ -1,5 +1,5 @@
 from time import sleep
-#from gpiozero import DistanceSensor, CamJamKitRobot
+from gpiozero import DistanceSensor, CamJamKitRobot
  
 import socket
 
@@ -8,37 +8,45 @@ import socket
 pinTrig = 17
 pinEcho = 18 
 
-#robot = CamJamKitRobot()
-#distSens = DistanceSensor(echo=pinEcho, trigger=pinTrig)
+
+IP = 'localhost'
+PORT = 8000
+
+
+robot = CamJamKitRobot()
+distSens = DistanceSensor(echo=pinEcho, trigger=pinTrig)
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 
 # set left and right to a value that makes the robot go straigt
-left = 0
-right = 0
+FFleft  = -0.33
+FFright =-0.3
 
 def getDist():
-	return 10
-#	return distSens.distance*100
+#	return 10
+	return distSens.distance*100
 
-def motorRun(left, right):
-	print(str(left) + " " + str(right))
-	#	motorValue = (left,right)
-	#	robot.value = motorValue
+def motorRun(_left, _right):
+	#print(str(left) + " " + str(right))
+	left = _left
+	right = _right
+	motorValue = (left,right)
+	robot.value = motorValue
 
 def motorStop():
 	print("Motor stopped")
-	#robot.value = (0,0)
+	robot.value = (0,0)
 
 def start(times):
 	print("Robot started")
 
-	#----------P-controller---------#
-	ref = 20
-	gain = 1
+	#--------P-controller---------#
+	ref = 25
+	gain = 1.3
 
 	for i in range(times):
-
+		newLeft = 0 
+		newRight = 0
 		# Get data from 
 		error = 0	
 		for i in range(10):
@@ -46,23 +54,32 @@ def start(times):
 		avgError = error/10
 
 		diff = ref - avgError
-
-		if diff > 0.1:
-			newRight = right*(gain*abs(diff))
-			motorRun(left,newRight)
-		elif diff < -0.1:
-			newLeft = left*(gain*abs(diff))
-			motorRun(newLeft,right)
+		#print(((gain*abs(diff)))/100)
+		if diff > 0.00001:
+			newRight = FFright+(0.5*(gain*abs(diff)))/100
+			if newRight > 0.99:
+				motorRun(FFleft,0.99)
+			else:
+				motorRun(FFleft,newRight)
+				
+		elif diff < -0.00001:
+			newLeft = FFleft+(0.5*(gain*abs(diff)))/100
+			if newLeft > 0.99:
+				motorRun(0.99,FFright)
+			else: 
+				motorRun(newLeft,FFright)
+			
+		print("Diff: "+ str(diff) + " left: " + str(newLeft) + " right: " + str(newRight) + " Error: " + str(avgError) + " ") 
+	stop()
 
 
 def stop():
 	print("Robot Stopped")
+	motorStop()
 
 
 def startServer():
 	
-	IP = 'localhost'
-	PORT = 8080
 
 	sock.bind((IP,PORT))
 	sock.listen(1)
