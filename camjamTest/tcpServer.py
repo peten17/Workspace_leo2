@@ -19,8 +19,11 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 
 # set left and right to a value that makes the robot go straigt
-FFleft  = -0.33
-FFright =-0.3
+#FFleft  = -0.3
+#FFright =-0.33
+
+FFleft = -0.25
+FFright= -0.28
 
 def getDist():
 #	return 10
@@ -41,35 +44,41 @@ def start(times):
 	print("Robot started")
 
 	#--------P-controller---------#
-	ref = 25
-	gain = 1.3
+	ref = 15
+	gain = -1.5
 
 	for i in range(times):
 		newLeft = 0 
 		newRight = 0
-		# Get data from 
 		error = 0	
-		for i in range(10):
+		
+		# Get data from encoder
+		for i in range(5):
 			error+= getDist()
 		avgError = error/10
 
 		diff = ref - avgError
-		#print(((gain*abs(diff)))/100)
+		
+		
 		if diff > 0.00001:
-			newRight = FFright+(0.5*(gain*abs(diff)))/100
-			if newRight > 0.99:
-				motorRun(FFleft,0.99)
+			newRight = FFright+(gain*abs(diff))/100
+			if newRight < -1:
+				motorRun(FFleft,-1)
+				print("too high")
 			else:
 				motorRun(FFleft,newRight)
 				
 		elif diff < -0.00001:
-			newLeft = FFleft+(0.5*(gain*abs(diff)))/100
-			if newLeft > 0.99:
-				motorRun(0.99,FFright)
+			newLeft = FFleft+(gain*abs(diff))/100
+			if newLeft < -1:
+				motorRun(-1,FFright)
+				print("too high")
 			else: 
 				motorRun(newLeft,FFright)
+				
+	#------- P-Controller--------#
 			
-		print("Diff: "+ str(diff) + " left: " + str(newLeft) + " right: " + str(newRight) + " Error: " + str(avgError) + " ") 
+		print("Diff: "+ str(diff) + " newLeft/left: " + str(newLeft)+"/"+str(FFleft) + " | newRight/right: " + str(newRight)+ "/" + str(FFright) )
 	stop()
 
 
