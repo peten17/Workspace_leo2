@@ -60,27 +60,28 @@ def start(times):
 
 		diff = ref - avgError
 
+		
+		#	Sets new values for each motor each cycle 
+		newRight = FFright -1*(FFright*diff)
+		newLeft = FFleft + 1*(FFleft*diff)
+		motorRun(newLeft,newRight)
 
-		if diff > 0.00001:
-			newRight = FFright+(gain*abs(diff)*1.2)/100
-			if newRight < -1:
-				motorRun(FFleft,-0.8)
-				print("too high")
-			else:
-				motorRun(FFleft,newRight)
-				
-
-		elif diff < -0.00001:
-			newLeft = FFleft+(gain*abs(diff)*1.2)/100
-			if newLeft < -1:
-				motorRun(-0.8,FFright)
-				print("too high")
-			else: 
-				motorRun(newLeft,FFright)
-				
-		else:
-			motorRun(FFleft,FFright)
-
+#		if diff > 0.00001:
+#			newRight = FFright+(gain*abs(diff))/100
+#			if newRight < -1:
+#				motorRun(FFleft,-1)
+#				print("too high")
+#			else:
+#				motorRun(FFleft,newRight)
+#				
+#		elif diff < -0.00001:
+#			newLeft = FFleft+(gain*abs(diff))/100
+#			if newLeft < -1:
+#				motorRun(-1,FFright)
+#				print("too high")
+#			else: 
+#				motorRun(newLeft,FFright)
+#				
 	#------- P-Controller--------#
 
 		print("Diff: "+ str(diff) + " newLeft/left: " + str(newLeft)+"/"+str(FFleft) + " | newRight/right: " + str(newRight)+ "/" + str(FFright) )
