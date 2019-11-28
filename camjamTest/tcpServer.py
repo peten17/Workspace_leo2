@@ -9,7 +9,7 @@ pinTrig = 17
 pinEcho = 18 
 
 
-IP = 'localhost'
+IP = '192.168.1.98'
 PORT = 8000
 
 
@@ -22,8 +22,8 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 #FFleft  = -0.3
 #FFright =-0.33
 
-FFleft = -0.25
-FFright= -0.28
+FFleft = -0.31
+FFright= -0.35
 
 def getDist():
 #	return 10
@@ -44,8 +44,8 @@ def start(times):
 	print("Robot started")
 
 	#--------P-controller---------#
-	ref = 15
-	gain = -1.5
+	ref = 30
+	gain = -1.7
 
 	for i in range(times):
 		newLeft = 0 
@@ -53,31 +53,36 @@ def start(times):
 		error = 0	
 		
 		# Get data from encoder
-		for i in range(5):
+		for i in range(1):
 			error+= getDist()
-		avgError = error/10
+		avgError = error/1
+		sleep(0.0001)
 
 		diff = ref - avgError
-		
-		
+
+
 		if diff > 0.00001:
-			newRight = FFright+(gain*abs(diff))/100
+			newRight = FFright+(gain*abs(diff)*1.2)/100
 			if newRight < -1:
-				motorRun(FFleft,-1)
+				motorRun(FFleft,-0.8)
 				print("too high")
 			else:
 				motorRun(FFleft,newRight)
 				
+
 		elif diff < -0.00001:
-			newLeft = FFleft+(gain*abs(diff))/100
+			newLeft = FFleft+(gain*abs(diff)*1.2)/100
 			if newLeft < -1:
-				motorRun(-1,FFright)
+				motorRun(-0.8,FFright)
 				print("too high")
 			else: 
 				motorRun(newLeft,FFright)
 				
+		else:
+			motorRun(FFleft,FFright)
+
 	#------- P-Controller--------#
-			
+
 		print("Diff: "+ str(diff) + " newLeft/left: " + str(newLeft)+"/"+str(FFleft) + " | newRight/right: " + str(newRight)+ "/" + str(FFright) )
 	stop()
 
@@ -89,11 +94,8 @@ def stop():
 
 def startServer():
 	
-
 	sock.bind((IP,PORT))
 	sock.listen(1)
-	
-
 
 	while True:
 		conn, addr = sock.accept()	
@@ -102,11 +104,9 @@ def startServer():
 			sock.close()
 			break
 		
-
 		# Decodes the data and removes newlines
 		decodedData = data.decode().rstrip("\n").split(" ")
 		print("Recieved data: " + decodedData[0])
-
 
 		# Checks the message from the client and calls the appropiate function
 		if decodedData[0] == "start":
