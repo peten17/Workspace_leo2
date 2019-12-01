@@ -9,8 +9,8 @@ pinTrig = 17
 pinEcho = 18 
 
 
-IP = '192.168.1.98'
-PORT = 8000
+IP = '192.168.99.22'
+PORT = 8080
 
 
 robot = CamJamKitRobot()
@@ -24,6 +24,11 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 FFleft = -0.31
 FFright= -0.35
+
+# TO-DO:
+# Overload start funktion så den stemmer overens med opgavebeskrivelsen.
+# Skriv getmotors-funktionen
+ 
 
 def getDist():
 #	return 10
@@ -109,7 +114,7 @@ def startServer():
 		decodedData = data.decode().rstrip("\n").split(" ")
 		print("Recieved data: " + decodedData[0])
 
-		# Checks the message from the client and calls the appropiate function
+		# Checks the message from the client and calls the appropriate function
 		if decodedData[0] == "start":
 			start(int(decodedData[1]))
 			respons = "Robot started\n"
@@ -133,7 +138,7 @@ def startServer():
 			conn.close()
 			break
 		else:
-			respons = "Not at valid command\n"
+			respons = "Not a valid command\n"
 			conn.send(str.encode(respons))
 
 				
