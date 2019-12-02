@@ -67,24 +67,6 @@ def start(times):
 		newLeft = FFleft + 1*(FFleft*diff)
 		motorRun(newLeft,newRight)
 
-#		if diff > 0.00001:
-#			newRight = FFright+(gain*abs(diff))/100
-#			if newRight < -1:
-#				motorRun(FFleft,-1)
-#				print("too high")
-#			else:
-#				motorRun(FFleft,newRight)
-#				
-#		elif diff < -0.00001:
-#			newLeft = FFleft+(gain*abs(diff))/100
-#			if newLeft < -1:
-#				motorRun(-1,FFright)
-#				print("too high")
-#			else: 
-#				motorRun(newLeft,FFright)
-#				
-	#------- P-Controller--------#
-
 		print("Diff: "+ str(diff) + " newLeft/left: " + str(newLeft)+"/"+str(FFleft) + " | newRight/right: " + str(newRight)+ "/" + str(FFright) )
 	stop()
 
@@ -92,6 +74,40 @@ def start(times):
 def stop():
 	print("Robot Stopped")
 	motorStop()
+	
+def start():
+	
+	while decodedData != "stop"
+	
+		data = conn.recv(1024)
+		decodedData = data.decode().rstrip("\n")
+		
+		ref = 30
+		gain = -1.7
+
+		newLeft = 0 
+		newRight = 0
+		error = 0	
+
+		# Get data from encoder
+		for i in range(1):
+			error+= getDist()
+		avgError = error/1
+		sleep(0.0001)
+
+		diff = ref - avgError
+
+
+		#	Sets new values for each motor each cycle 
+		newRight = FFright -1*(FFright*diff)
+		newLeft = FFleft + 1*(FFleft*diff)
+		motorRun(newLeft,newRight)
+		
+		print("Diff: "+ str(diff) + " newLeft/left: " + str(newLeft)+"/"+str(FFleft) + " | newRight/right: " + str(newRight)+ "/" + str(FFright) )
+		
+	stop()
+	
+	
 
 def startServer():
 	
@@ -116,6 +132,10 @@ def startServer():
 			start(int(decodedData[1]))
 			respons = "Robot started\n"
 			conn.send(str.encode(respons))
+		elif decodedData[0] == "start":
+			respons = "Robot started\n"
+			conn.send(str.encode(respons))
+			start()
 		elif decodedData[0] == "stop":
 			stop()
 			respons = "Robot stopped\n"
