@@ -28,7 +28,7 @@ FFright= -0.35
 
 def getDist():
 #	return 10
-	print(distSens.distance*100)
+	return distSens.distance*100
 
 def motorRun(_left, _right):
 	#print(str(left) + " " + str(right))
@@ -97,13 +97,19 @@ def startServer():
 	
 	sock.bind((IP,PORT))
 	sock.listen(1)
+	
+	# Moved here by Jens
+	conn, addr = sock.accept()
 
 	while True:
-		conn, addr = sock.accept()	
+			
 		data = conn.recv(1024)
-		if not data:
-			sock.close()
-			break
+		
+		# Commented out by Jens, because the code migth cause the server to close, which we are not interested in.
+		# Could be moved to a command called 'closed' or such
+		#if not data:
+			#sock.close()
+			#break
 		
 		# Decodes the data and removes newlines
 		decodedData = data.decode().rstrip("\n").split(" ")
