@@ -1,22 +1,18 @@
 from time import sleep
 from gpiozero import DistanceSensor, CamJamKitRobot
- 
+import os
 import socket
-
 
 # Pin definition
 pinTrig = 17
 pinEcho = 18 
 
-
 IP = '192.168.99.22'
 PORT = 8080
-
 
 robot = CamJamKitRobot()
 distSens = DistanceSensor(echo=pinEcho, trigger=pinTrig)
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
 
 # set left and right to a value that makes the robot go straigt
 #FFleft  = -0.3
@@ -32,7 +28,7 @@ FFright= -0.35
 
 def getDist():
 #	return 10
-	return distSens.distance*100
+	print(distSens.distance*100)
 
 def motorRun(_left, _right):
 	#print(str(left) + " " + str(right))
@@ -96,7 +92,6 @@ def start(times):
 def stop():
 	print("Robot Stopped")
 	motorStop()
-
 
 def startServer():
 	
