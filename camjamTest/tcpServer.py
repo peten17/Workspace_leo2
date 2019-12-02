@@ -13,6 +13,9 @@ PORT = 8080
 robot = CamJamKitRobot()
 distSens = DistanceSensor(echo=pinEcho, trigger=pinTrig)
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.bind((IP,PORT))
+sock.listen(1)
+
 
 # set left and right to a value that makes the robot go straigt
 #FFleft  = -0.3
@@ -76,12 +79,11 @@ def stop():
 	motorStop()
 	
 def start():
+
+	#print("in start()")
 	
-	while decodedData != "stop"
-	
-		data = conn.recv(1024)
-		decodedData = data.decode().rstrip("\n")
-		
+	while True:
+
 		ref = 30
 		gain = -1.7
 
@@ -105,14 +107,20 @@ def start():
 		
 		print("Diff: "+ str(diff) + " newLeft/left: " + str(newLeft)+"/"+str(FFleft) + " | newRight/right: " + str(newRight)+ "/" + str(FFright) )
 		
+
+		conn, addr = sock.accept()
+		data = conn.recv(1024)
+		decodedData = data.decode().rstrip("\n")
+
+		if decodedData == "stop":
+			break
+
 	stop()
 	
 	
 
 def startServer():
 	
-	sock.bind((IP,PORT))
-	sock.listen(1)
 
 	while True:
 
@@ -128,7 +136,7 @@ def startServer():
 		print("Recieved data: " + decodedData[0])
 
 		# Checks the message from the client and calls the appropriate function
-		if decodedData[0] == "start":
+		if len(decodedData) > 1 and decodedData[0] == "start":
 			start(int(decodedData[1]))
 			respons = "Robot started\n"
 			conn.send(str.encode(respons))
