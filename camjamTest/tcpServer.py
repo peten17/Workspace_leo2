@@ -97,19 +97,15 @@ def startServer():
 	
 	sock.bind((IP,PORT))
 	sock.listen(1)
-	
-	# Moved here by Jens
-	conn, addr = sock.accept()
 
 	while True:
-			
+
+		conn, addr = sock.accept()
 		data = conn.recv(1024)
 		
-		# Commented out by Jens, because the code migth cause the server to close, which we are not interested in.
-		# Could be moved to a command called 'closed' or such
-		#if not data:
-			#sock.close()
-			#break
+		if not data:
+			sock.close()
+			break
 		
 		# Decodes the data and removes newlines
 		decodedData = data.decode().rstrip("\n").split(" ")
