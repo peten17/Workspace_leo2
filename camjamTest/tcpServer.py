@@ -21,7 +21,7 @@ sock.listen(1)
 #FFleft  = -0.3
 #FFright =-0.33
 
-FFleft = -0.31
+FFleft = -0.32
 FFright= -0.35
 
 # TO-DO:
@@ -44,12 +44,12 @@ def motorStop():
 	print("Motor stopped")
 	robot.value = (0,0)
 
-def start(times):
+def startTimes(times):
 	print("Robot started")
 
 	#--------P-controller---------#
-	ref = 30
-	gain = -1.7
+	ref = 20
+	gain = 1.3
 
 	for i in range(times):
 		newLeft = 0 
@@ -60,14 +60,15 @@ def start(times):
 		for i in range(1):
 			error+= getDist()
 		avgError = error/1
-		sleep(0.0001)
+		#sleep(0.0001)
 
 		diff = ref - avgError
 
 		
 		#	Sets new values for each motor each cycle 
-		newRight = FFright -1*(FFright*diff)
-		newLeft = FFleft + 1*(FFleft*diff)
+		newRight = FFright + gain*(FFright*(diff)/100)
+		newLeft = FFleft - gain*(FFleft*(diff)/100)
+		#print(str(newLeft) + " " + str(newRight)) 
 		motorRun(newLeft,newRight)
 
 		print("Diff: "+ str(diff) + " newLeft/left: " + str(newLeft)+"/"+str(FFleft) + " | newRight/right: " + str(newRight)+ "/" + str(FFright) )
@@ -85,7 +86,7 @@ def start():
 	while True:
 
 		ref = 30
-		gain = -1.7
+		gain = 1.3
 
 		newLeft = 0 
 		newRight = 0
@@ -101,12 +102,11 @@ def start():
 
 
 		#	Sets new values for each motor each cycle 
-		newRight = FFright -1*(FFright*diff)
-		newLeft = FFleft + 1*(FFleft*diff)
+		newRight = FFright + gain*(FFright*(diff)/100)
+		newLeft = FFleft - gain*(FFleft*(diff)/100)
+		#print(str(newLeft) + " " + str(newRight)) 
 		motorRun(newLeft,newRight)
-		
 		print("Diff: "+ str(diff) + " newLeft/left: " + str(newLeft)+"/"+str(FFleft) + " | newRight/right: " + str(newRight)+ "/" + str(FFright) )
-		
 
 		conn, addr = sock.accept()
 		data = conn.recv(1024)
@@ -137,7 +137,7 @@ def startServer():
 
 		# Checks the message from the client and calls the appropriate function
 		if len(decodedData) > 1 and decodedData[0] == "start":
-			start(int(decodedData[1]))
+			startTimes(int(decodedData[1]))
 			respons = "Robot started\n"
 			conn.send(str.encode(respons))
 		elif decodedData[0] == "start":
@@ -170,6 +170,8 @@ def startServer():
 
 
 # -- main -- #
+#sleep(10)
+#print("Ready")
 startServer()
 
 
