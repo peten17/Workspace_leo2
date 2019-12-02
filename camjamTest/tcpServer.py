@@ -1,7 +1,7 @@
 from time import sleep
 from gpiozero import DistanceSensor, CamJamKitRobot
-import os
 import socket
+#import sys
 
 # Pin definition
 pinTrig = 17
@@ -15,6 +15,7 @@ distSens = DistanceSensor(echo=pinEcho, trigger=pinTrig)
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.bind((IP,PORT))
 sock.listen(1)
+sock.setblocking(0)
 
 
 # set left and right to a value that makes the robot go straigt
@@ -80,98 +81,121 @@ def stop():
 	motorStop()
 	
 def start():
-
-	#print("in start()")
+	stopped = False
 	
 	while True:
+		try:
+			ref = 30
+			gain = 1.3
 
-		ref = 30
-		gain = 1.3
+			newLeft = 0 
+			newRight = 0
+			error = 0	
 
-		newLeft = 0 
-		newRight = 0
-		error = 0	
+			# Get data from encoder
+			for i in range(1):
+				error+= getDist()
+			avgError = error/1
+			sleep(0.0001)
 
-		# Get data from encoder
-		for i in range(1):
-			error+= getDist()
-		avgError = error/1
-		sleep(0.0001)
-
-		diff = ref - avgError
+			diff = ref - avgError
 
 
-		#	Sets new values for each motor each cycle 
-		newRight = FFright + gain*(FFright*(diff)/100)
-		newLeft = FFleft - gain*(FFleft*(diff)/100)
-		#print(str(newLeft) + " " + str(newRight)) 
-		motorRun(newLeft,newRight)
-		print("Diff: "+ str(diff) + " newLeft/left: " + str(newLeft)+"/"+str(FFleft) + " | newRight/right: " + str(newRight)+ "/" + str(FFright) )
+			#	Sets new values for each motor each cycle 
+			newRight = FFright + gain*(FFright*(diff)/100)
+			newLeft = FFleft - gain*(FFleft*(diff)/100)
+			#print(str(newLeft) + " " + str(newRight)) 
+			motorRun(newLeft,newRight)
+			print("Diff: "+ str(diff) + " newLeft/left: " + str(newLeft)+"/"+str(FFleft) + " | newRight/right: " + str(newRight)+ "/" + str(FFright) )
 
-		conn, addr = sock.accept()
-		data = conn.recv(1024)
-		decodedData = data.decode().rstrip("\n")
+			conn, addr = sock.accept()
+			data = conn.recv(1024)
+			message = decodeMessage(data)
+			if message[0] == "start" or message[0] == "run":
+				response = "Invalid command. Please stop the robot first before attempting to start or run it."
+				conn.send(str.encode(response))
+			#if message[0] == "exit":
+				#stop()
+				#stopped = True;
+				#break 
+			else:
+				if message[0] == "stop":
+					stopped = True
+				response = commands(message)
+				conn.send(str.encode(response))
+		except:
+			pass
 
-		if decodedData == "stop":
+		if stopped == True:
 			break
-
-	stop()
 	
-	
+def decodeMessage(data):
+	# Decodes the data and removes newlines
+	decodedData = data.decode().rstrip("\n").split(" ")
+	print("Recieved data: " + decodedData[0])
+	return decodedData 
 
 def startServer():
-	
 
 	while True:
-
-		conn, addr = sock.accept()
-		data = conn.recv(1024)
+		try:
+			conn, addr = sock.accept()
+			data = conn.recv(1024)
 		
-		if not data:
-			sock.close()
-			break
-		
-		# Decodes the data and removes newlines
-		decodedData = data.decode().rstrip("\n").split(" ")
-		print("Recieved data: " + decodedData[0])
+			#print(data)
+			#sleep(1)
 
-		# Checks the message from the client and calls the appropriate function
-		if len(decodedData) > 1 and decodedData[0] == "start":
-			startTimes(int(decodedData[1]))
-			respons = "Robot started\n"
-			conn.send(str.encode(respons))
-		elif decodedData[0] == "start":
-			respons = "Robot started\n"
-			conn.send(str.encode(respons))
-			start()
-		elif decodedData[0] == "stop":
-			stop()
-			respons = "Robot stopped\n"
-			conn.send(str.encode(respons))
-		elif decodedData[0] == "run":
-			motorRun(float(decodedData[1]),float(decodedData[2]))
-			print("data: " + decodedData[1] + " " + decodedData[2])
-		elif decodedData[0] == "getdist":
-			respons = str(getDist()) + "\n"
-			conn.send(str.encode(respons))
-		elif decodedData[0] == "getmotors":
-			respons = "Left: " + str(left) + " Right: " + str(right) + "\n"
-			conn.send(str.encode(respons))
-		elif decodedData[0] == "exit":
-			respons = "Server is closing..\n"
-			conn.send(str.encode(respons))
-			conn.close()
-			break
-		else:
-			respons = "Not a valid command\n"
-			conn.send(str.encode(respons))
+			message = decodeMessage(data)
 
-				
+			#print(message[0])
+			
+			#if message[0] == "exit":
+				#response = "Server is closing...\n"
+				#conn.send(str.encode(response))
+				#print("Dab")				
+				#sys.exit('Goodbye cruel world!')				
+				#conn.close()
+				#sock.close()
+			if message[0] == "start":
+				response = "Robot started\n"
+				conn.send(str.encode(response))				
+				if len(message) == 1:
+					start()
+				else:
+					startTimes(int(message[1]))
+			else:
+				response = commands(message)
+				conn.send(str.encode(response))
+		except:
+			pass
 
+
+		#if not data:
+			#sock.close()
+			#break
+
+def commands(command):
+	# Checks the message from the client and calls the appropriate function
+	if command[0] == "stop":
+		stop()
+		response = "Robot stopped\n"
+		return response
+	elif command[0] == "run":	
+		motorRun(float(message[1]),float(message[2]))
+		print("data: " + message[1] + " " + message[2])
+		response = "Robot running\n"
+		return response
+	elif command[0] == "getdist":
+		response = str(getDist()) + "\n"
+		return response
+	elif command[0] == "getmotors":
+		response = "Left: " + str(left) + " Right: " + str(right) + "\n"
+		return response
+	else:
+		response = "Not a valid command\n"
+		return response	
 
 # -- main -- #
-#sleep(10)
-#print("Ready")
 startServer()
 
 
