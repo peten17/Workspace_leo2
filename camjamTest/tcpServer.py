@@ -139,11 +139,6 @@ def commands(command):
 		_stop = True
 		response = "Robot stopped\n"
 		return response
-	elif command[0] == "run":	
-		motorRun(float(message[1]),float(message[2]))
-		print("data: " + message[1] + " " + message[2])
-		response = "Robot running\n"
-		return response
 	elif command[0] == "getdist":
 		response = str(getDist()) + "\n"
 		return response
